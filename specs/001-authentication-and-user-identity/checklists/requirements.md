@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-02-05
-**Feature**: [Link to spec.md](../specs/1-authentication-and-user-identity/spec.md)
+**Feature**: [Link to spec.md](../specs/001-authentication-and-user-identity/spec.md)
 
 ## Content Quality
 
