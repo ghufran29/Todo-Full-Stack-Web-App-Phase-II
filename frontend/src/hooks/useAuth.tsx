@@ -97,14 +97,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         router.push('/tasks');
       } else {
         setError('Invalid response from server');
+        throw new Error('Invalid response from server');
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      if (err.response?.data?.detail) {
-        setError(err.response.data.detail);
-      } else {
-        setError('An error occurred during login. Please try again.');
-      }
+      const errorMessage = err.response?.data?.detail || 'An error occurred during login. Please try again.';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -119,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await apiClient.post('/api/auth/signup', {
         email,
         password,
-        confirmPassword
+        confirm_password: confirmPassword
       });
 
       const token = response.data.access_token || response.data.token;
@@ -139,14 +138,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         router.push('/tasks');
       } else {
         setError('Invalid response from server');
+        throw new Error('Invalid response from server');
       }
     } catch (err: any) {
       console.error('Registration error:', err);
-      if (err.response?.data?.detail) {
-        setError(err.response.data.detail);
-      } else {
-        setError('An error occurred during registration. Please try again.');
-      }
+      const errorMessage = err.response?.data?.detail || 'An error occurred during registration. Please try again.';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }

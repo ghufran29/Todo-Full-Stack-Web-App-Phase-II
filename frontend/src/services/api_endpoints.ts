@@ -32,12 +32,6 @@ export const TASK_ENDPOINTS = {
   GET_TASKS_BY_USER: (userId: string) => `/users/${userId}/tasks`
 } as const;
 
-// Profile endpoints
-export const PROFILE_ENDPOINTS = {
-  GET_PROFILE: '/users/me',
-  UPDATE_PROFILE: '/users/me'
-} as const;
-
 /**
  * API Utility Functions
  */
@@ -45,7 +39,6 @@ export class ApiEndpoints {
   static auth = AUTH_ENDPOINTS;
   static user = USER_ENDPOINTS;
   static task = TASK_ENDPOINTS;
-  static profile = PROFILE_ENDPOINTS;
 
   /**
    * Construct a task endpoint with proper ID
@@ -96,4 +89,3 @@ export class ApiEndpoints {
 export type AuthEndpoints = typeof AUTH_ENDPOINTS;
 export type UserEndpoints = typeof USER_ENDPOINTS;
 export type TaskEndpoints = typeof TASK_ENDPOINTS;
-export type ProfileEndpoints = typeof PROFILE_ENDPOINTS;

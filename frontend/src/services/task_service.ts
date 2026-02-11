@@ -84,9 +84,8 @@ class TaskService {
    */
   static async updateTaskCompletion(taskId: string, completed: boolean): Promise<Task> {
     try {
-      const response = await apiClient.patch(`/api/tasks/${taskId}/complete`, {
-        completed: completed
-      });
+      // Explicitly convert boolean to string for query parameter
+      const response = await apiClient.patch(`/api/tasks/${taskId}/complete?completed=${String(completed)}`);
       return response.data;
     } catch (error) {
       console.error(`Error updating task completion status for ID ${taskId}:`, error);

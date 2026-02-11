@@ -9,8 +9,20 @@ load_dotenv()
 # Database URL from environment
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# Fix potential issue where DATABASE_URL might start with postgres:// (common in some environments)
+# SQLAlchemy requires postgresql://
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Ensure sslmode=require for Neon/PostgreSQL if not present
+if DATABASE_URL and "postgresql" in DATABASE_URL and "sslmode=" not in DATABASE_URL:
+    if "?" in DATABASE_URL:
+        DATABASE_URL += "&sslmode=require"
+    else:
+        DATABASE_URL += "?sslmode=require"
+
 # Try PostgreSQL first, fallback to SQLite for local testing
-if DATABASE_URL and DATABASE_URL.startswith("postgresql"):
+if DATABASE_URL and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgresql+")):
     try:
         # Create engine with connection pooling optimized for PostgreSQL/Neon
         engine = create_engine(
@@ -35,6 +47,8 @@ if DATABASE_URL and DATABASE_URL.startswith("postgresql"):
         )
 else:
     # Use SQLite for local development
+    if DATABASE_URL:
+        print(f"DATABASE_URL provided but does not start with postgresql://: {DATABASE_URL[:10]}...")
     print("Using SQLite database for local development")
     DATABASE_URL = "sqlite:///./todo_app.db"
     engine = create_engine(

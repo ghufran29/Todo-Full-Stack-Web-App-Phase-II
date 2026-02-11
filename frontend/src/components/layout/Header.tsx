@@ -41,12 +41,6 @@ const Header: React.FC = () => {
                 >
                   Create Task
                 </Link>
-                <Link
-                  href="/profile"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                >
-                  Profile
-                </Link>
               </div>
             )}
           </div>
@@ -97,12 +91,6 @@ const Header: React.FC = () => {
               className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
             >
               Create Task
-            </Link>
-            <Link
-              href="/profile"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-            >
-              Profile
             </Link>
           </div>
         )}

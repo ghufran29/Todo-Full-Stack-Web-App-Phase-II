@@ -45,15 +45,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ onTaskCreated, onCancel }) => {
     setLoading(true);
 
     try {
-      const taskData: TaskCreate = {
+      const taskData: any = {
         title: title.trim(),
         description: description.trim(),
         priority: priority,
       };
 
-      // Add due date if provided
+      // Add due date if provided - convert to ISO format
       if (dueDate) {
-        taskData.due_date = dueDate;
+        taskData.due_date = new Date(dueDate).toISOString();
       }
 
       // Create the task using the service

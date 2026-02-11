@@ -114,6 +114,62 @@ def login_user(
         )
 
 
+@router.post("/refresh", response_model=Dict[str, Any])
+def refresh_token(
+    refresh_data: Dict[str, str],
+    session: Session = Depends(get_session)
+):
+    """
+    Refresh an access token using a refresh token.
+
+    Args:
+        refresh_data: Dictionary containing 'refresh_token'
+        session: Database session dependency
+
+    Returns:
+        Dictionary containing new access token
+    """
+    refresh_token_str = refresh_data.get("refresh_token")
+    if not refresh_token_str:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Refresh token is required"
+        )
+
+    from src.utils.jwt_utils import verify_token, create_access_token
+    
+    payload = verify_token(refresh_token_str)
+    if not payload or payload.get("type") != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token"
+        )
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token payload"
+        )
+
+    user = UserService.get_user_by_id(user_id, session)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+
+    # Create new access token
+    token_data = {"sub": str(user.id), "email": user.email}
+    new_access_token = create_access_token(data=token_data)
+
+    return {
+        "success": True,
+        "access_token": new_access_token,
+        "token_type": "bearer"
+    }
+
+
 @router.post("/signout")
 def logout_user():
     """
@@ -128,52 +184,3 @@ def logout_user():
         "success": True,
         "message": "Successfully signed out"
     }
-
-
-@router.get("/me", response_model=UserPublic)
-def get_current_user_profile(
-    current_user: UserPublic = Depends(get_current_user)
-):
-    """
-    Retrieve the currently authenticated user's profile information.
-
-    Args:
-        current_user: The currently authenticated user (from middleware)
-
-    Returns:
-        UserPublic object with current user's information
-    """
-    # Return the current user from the authentication middleware
-    return current_user
-
-
-@router.get("/tasks", response_model=list[TaskPublic])
-def get_authenticated_user_tasks(
-    current_user: UserPublic = Depends(get_current_user),
-    session: Session = Depends(get_session)
-):
-    """
-    Retrieve all tasks for the currently authenticated user.
-
-    Args:
-        current_user: The currently authenticated user (from middleware)
-        session: Database session dependency
-
-    Returns:
-        List of TaskPublic objects belonging to the current user
-    """
-    try:
-        tasks = TaskService.get_tasks_by_user(
-            user_id=str(current_user.id),
-            session=session
-        )
-        return tasks
-    except HTTPException:
-        # Re-raise HTTP exceptions as-is
-        raise
-    except Exception as e:
-        # Handle unexpected errors
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred while retrieving tasks: {str(e)}"
-        )

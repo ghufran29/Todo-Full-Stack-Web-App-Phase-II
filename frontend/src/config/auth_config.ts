@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
-  NEXT_PUBLIC_BETTER_AUTH_URL: z.string().url().default('http://localhost:3000'),
-  NEXT_PUBLIC_API_BASE_URL: z.string().url().default('http://localhost:8000'),
+  NEXT_PUBLIC_BETTER_AUTH_URL: z.string().url().default('https://todo-full-stack-web-app-phase-ii.vercel.app'),
+  NEXT_PUBLIC_API_BASE_URL: z.string().url().default('https://helloworlds665-todo-full-stack-web-app.hf.space'),
   NEXT_PUBLIC_JWT_TOKEN_KEY: z.string().default('auth_token'),
   NEXT_PUBLIC_REFRESH_TOKEN_KEY: z.string().default('refresh_token'),
 });
@@ -14,16 +14,16 @@ if (!env.success) {
   console.error('❌ Invalid environment variables:', env.error.flatten().fieldErrors);
 
   // Use fallback values for development
-  process.env.NEXT_PUBLIC_BETTER_AUTH_URL = 'http://localhost:3000';
-  process.env.NEXT_PUBLIC_API_BASE_URL = 'http://localhost:8000';
+  process.env.NEXT_PUBLIC_BETTER_AUTH_URL = 'https://todo-full-stack-web-app-phase-ii.vercel.app';
+  process.env.NEXT_PUBLIC_API_BASE_URL = 'https://helloworlds665-todo-full-stack-web-app.hf.space';
   process.env.NEXT_PUBLIC_JWT_TOKEN_KEY = 'auth_token';
   process.env.NEXT_PUBLIC_REFRESH_TOKEN_KEY = 'refresh_token';
 }
 
 export const authConfig = {
   // Base URLs
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
-  authUrl: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || 'http://localhost:3000',
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://helloworlds665-todo-full-stack-web-app.hf.space',
+  authUrl: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || 'https://todo-full-stack-web-app-phase-ii.vercel.app',
 
   // Token storage keys
   tokenKey: process.env.NEXT_PUBLIC_JWT_TOKEN_KEY || 'auth_token',

@@ -32,7 +32,15 @@ const TaskList: React.FC<TaskListProps> = ({ onTaskUpdate, onTaskDelete }) => {
       setTasks(response.data);
     } catch (err: any) {
       console.error('Error fetching tasks:', err);
-      setError(err.response?.data?.detail || 'Failed to load tasks');
+      // If 404, it might just mean no tasks found endpoint or empty list, depending on backend implementation. 
+      // Safest to just show empty list if strictly 404 on list endpoint is the behavior, 
+      // but usually list endpoints return 200 [] for empty.
+      // However, keeping robust error handling is good.
+      if (err.response?.status === 404) {
+         setTasks([]); // Treat 404 as no tasks
+      } else {
+         setError(err.response?.data?.detail || 'Failed to load tasks');
+      }
     } finally {
       setLoading(false);
     }
@@ -43,23 +51,45 @@ const TaskList: React.FC<TaskListProps> = ({ onTaskUpdate, onTaskDelete }) => {
     setShowForm(false);
   };
 
-  const handleTaskUpdated = (updatedTask: Task) => {
-    setTasks(prev => prev.map(task => task.id === updatedTask.id ? updatedTask : task));
-    if (onTaskUpdate) onTaskUpdate(updatedTask);
+  const handleTaskUpdated = async (updatedTask: Task) => {
+    try {
+      // Only call API if it's a full update from TaskItem (not just a toggle)
+      // Actually, it's safer to always sync if we have the ID
+      if (updatedTask.id) {
+        const response = await apiClient.updateTask(updatedTask.id, {
+          title: updatedTask.title,
+          description: updatedTask.description,
+          status: updatedTask.status,
+          priority: updatedTask.priority,
+          due_date: updatedTask.due_date
+        });
+        setTasks(prev => prev.map(task => task.id === response.id ? response : task));
+        if (onTaskUpdate) onTaskUpdate(response);
+      }
+    } catch (err) {
+      console.error('Error updating task:', err);
+      setError('Failed to save task changes');
+    }
   };
 
-  const handleTaskDeleted = (taskId: string) => {
-    setTasks(prev => prev.filter(task => task.id !== taskId));
-    if (onTaskDelete) onTaskDelete(taskId);
+  const handleTaskDeleted = async (taskId: string) => {
+    try {
+      await apiClient.deleteTask(taskId);
+      setTasks(prev => prev.filter(task => task.id !== taskId));
+      if (onTaskDelete) onTaskDelete(taskId);
+    } catch (err) {
+      console.error('Error deleting task:', err);
+      setError('Failed to delete task');
+    }
   };
 
   const handleToggleComplete = async (task: Task) => {
     try {
-      const response = await apiClient.patch(`/api/tasks/${task.id}/complete`, {
-        completed: !task.status || task.status !== 'completed'
-      });
+      if (!task.id) return;
+      const isCompleted = task.status === 'completed';
+      const response = await apiClient.completeTask(task.id, !isCompleted);
 
-      handleTaskUpdated(response.data);
+      handleTaskUpdated(response);
     } catch (err: any) {
       console.error('Error updating task completion:', err);
       setError('Failed to update task status');

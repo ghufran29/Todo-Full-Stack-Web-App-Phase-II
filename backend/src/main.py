@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.task_router import router as task_router
 from src.api.auth_router import router as auth_router
-from src.api.task_completion_router import router as task_completion_router
 from src.api.user_router import router as user_router
 from src.database.connection import create_db_and_tables
 import uvicorn
@@ -18,8 +17,8 @@ def create_app() -> FastAPI:
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # In production, replace with specific origins
-        allow_credentials=True,
+        allow_origins=["*"],
+        allow_credentials=False,  # Set to False to allow "*" origins, which is most stable for JWT development
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -28,7 +27,6 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api")
     app.include_router(user_router, prefix="/api")
     app.include_router(task_router, prefix="/api")
-    app.include_router(task_completion_router, prefix="/api")
 
     @app.on_event("startup")
     def on_startup():

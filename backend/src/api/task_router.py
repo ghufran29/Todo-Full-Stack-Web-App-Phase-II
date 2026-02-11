@@ -62,16 +62,20 @@ def create_task(
         Created TaskPublic object
     """
     try:
+        print(f"DEBUG: Creating task for user {current_user.id}: {task_create}")
         task = TaskService.create_task_for_user(
             task_create=task_create,
             user_id=str(current_user.id),
             session=session
         )
+        print(f"DEBUG: Task created successfully: {task}")
         return task
-    except HTTPException:
+    except HTTPException as e:
+        print(f"DEBUG: HTTPException in create_task: {e.detail}")
         # Re-raise HTTP exceptions as-is
         raise
     except Exception as e:
+        print(f"DEBUG: Unexpected error in create_task: {str(e)}")
         # Handle unexpected errors
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

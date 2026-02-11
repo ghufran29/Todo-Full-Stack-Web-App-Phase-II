@@ -6,7 +6,7 @@ class ApiClient {
   private client: AxiosInstance;
   private refreshTokenPromise: Promise<string> | null = null;
 
-  constructor(baseURL: string = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') {
+  constructor(baseURL: string = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://helloworlds665-todo-full-stack-web-app.hf.space') {
     this.client = axios.create({
       baseURL,
       timeout: 10000, // 10 seconds timeout
@@ -35,7 +35,17 @@ class ApiClient {
         return response;
       },
       async (error: AxiosError) => {
-        if (error.response?.status === 401) {
+        console.error('API Error:', error.message);
+        if (error.response) {
+          console.error('Error Data:', error.response.data);
+          console.error('Error Status:', error.response.status);
+        }
+
+        const isAuthPage = typeof window !== 'undefined' && 
+          (window.location.pathname.includes('/auth/signin') || 
+           window.location.pathname.includes('/auth/signup'));
+
+        if (error.response?.status === 401 && !isAuthPage) {
           // Token might be expired, try to refresh it
           const refreshToken = this.getRefreshToken();
 
@@ -114,7 +124,7 @@ class ApiClient {
 
     this.refreshTokenPromise = (async () => {
       try {
-        const response = await axios.post(`${this.client.defaults.baseURL}/auth/refresh`, {
+        const response = await axios.post(`${this.client.defaults.baseURL}/api/auth/refresh`, {
           refresh_token: refreshToken
         });
 
@@ -171,11 +181,12 @@ class ApiClient {
 
   public async register(userData: UserCreate): Promise<AuthResponse> {
     try {
-      const response = await this.client.post<AuthResponse>('/auth/signup', userData);
+      const response = await this.client.post<AuthResponse>('/api/auth/signup', userData);
 
       // Save tokens on successful registration (auto-login)
-      if (response.data.token && response.data.refresh_token) {
-        this.saveTokens(response.data.token, response.data.refresh_token);
+      const token = (response.data as any).access_token || response.data.token;
+      if (token && response.data.refresh_token) {
+        this.saveTokens(token, response.data.refresh_token);
       }
 
       return response.data;
@@ -189,11 +200,12 @@ class ApiClient {
 
   public async login(credentials: UserLogin): Promise<AuthResponse> {
     try {
-      const response = await this.client.post<AuthResponse>('/auth/signin', credentials);
+      const response = await this.client.post<AuthResponse>('/api/auth/signin', credentials);
 
       // Save tokens on successful login
-      if (response.data.token && response.data.refresh_token) {
-        this.saveTokens(response.data.token, response.data.refresh_token);
+      const token = (response.data as any).access_token || response.data.token;
+      if (token && response.data.refresh_token) {
+        this.saveTokens(token, response.data.refresh_token);
       }
 
       return response.data;
@@ -207,7 +219,7 @@ class ApiClient {
 
   public async logout(): Promise<void> {
     try {
-      await this.client.post('/auth/signout');
+      await this.client.post('/api/auth/signout');
     } catch (error) {
       console.error('Logout error:', error);
       // Continue with clearing tokens even if backend logout fails
@@ -222,7 +234,7 @@ class ApiClient {
 
   public async getTasks(): Promise<Task[]> {
     try {
-      const response = await this.client.get<Task[]>('/tasks');
+      const response = await this.client.get<Task[]>('/api/tasks');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -234,7 +246,7 @@ class ApiClient {
 
   public async getTaskById(taskId: string): Promise<Task> {
     try {
-      const response = await this.client.get<Task>(`/tasks/${taskId}`);
+      const response = await this.client.get<Task>(`/api/tasks/${taskId}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -246,7 +258,7 @@ class ApiClient {
 
   public async createTask(taskData: TaskCreate): Promise<Task> {
     try {
-      const response = await this.client.post<Task>('/tasks', taskData);
+      const response = await this.client.post<Task>('/api/tasks', taskData);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -258,7 +270,7 @@ class ApiClient {
 
   public async updateTask(taskId: string, taskData: TaskUpdate): Promise<Task> {
     try {
-      const response = await this.client.put<Task>(`/tasks/${taskId}`, taskData);
+      const response = await this.client.put<Task>(`/api/tasks/${taskId}`, taskData);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -270,7 +282,7 @@ class ApiClient {
 
   public async deleteTask(taskId: string): Promise<void> {
     try {
-      await this.client.delete(`/tasks/${taskId}`);
+      await this.client.delete(`/api/tasks/${taskId}`);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(error.response?.data?.detail || error.message);
@@ -281,9 +293,7 @@ class ApiClient {
 
   public async completeTask(taskId: string, completed: boolean = true): Promise<Task> {
     try {
-      const response = await this.client.patch<Task>(`/tasks/${taskId}/complete`, {
-        completed
-      });
+      const response = await this.client.patch<Task>(`/api/tasks/${taskId}/complete?completed=${String(completed)}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
